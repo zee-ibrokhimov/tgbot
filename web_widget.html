@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Earpiece Rental</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #222;
+    --gold: #c9a84c;
+    --gold2: #f0c96b;
+    --text: #e8e8e8;
+    --muted: #666;
+    --user-bubble: #1e1a0e;
+    --bot-bubble: #161616;
+    --accent: #c9a84c;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  /* ── Widget Wrapper ── */
+  .widget {
+    width: 420px;
+    max-width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,168,76,0.08);
+    display: flex;
+    flex-direction: column;
+    height: 680px;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, #111 0%, #1a1500 100%);
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .header-icon {
+    width: 46px; height: 46px;
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(201,168,76,0.3);
+  }
+  .header-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: #fff; }
+  .header-sub { font-size: 12px; color: var(--gold); margin-top: 2px; }
+  .online-dot {
+    width: 8px; height: 8px;
+    background: #4ade80;
+    border-radius: 50%;
+    margin-left: auto;
+    box-shadow: 0 0 8px rgba(74,222,128,0.6);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ── Lang switcher ── */
+  .lang-bar {
+    display: flex;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .lang-btn {
+    flex: 1; padding: 8px;
+    background: none; border: none;
+    color: var(--muted); font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: all .2s;
+  }
+  .lang-btn.active {
+    color: var(--gold);
+    background: rgba(201,168,76,0.06);
+    border-bottom: 2px solid var(--gold);
+  }
+
+  /* ── Messages ── */
+  .messages {
+    flex: 1; overflow-y: auto;
+    padding: 20px 16px;
+    display: flex; flex-direction: column; gap: 10px;
+    scroll-behavior: smooth;
+  }
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .msg {
+    max-width: 88%;
+    animation: msgIn .25s ease;
+  }
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .msg.bot { align-self: flex-start; }
+  .msg.user { align-self: flex-end; }
+
+  .bubble {
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .msg.bot .bubble {
+    background: var(--bot-bubble);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+    color: var(--text);
+  }
+  .msg.user .bubble {
+    background: var(--user-bubble);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-bottom-right-radius: 4px;
+    color: var(--gold2);
+  }
+
+  /* ── Buttons ── */
+  .btn-group {
+    display: flex; flex-direction: column; gap: 6px;
+    margin-top: 8px;
+    max-width: 300px;
+  }
+  .btn-group.inline { flex-direction: row; flex-wrap: wrap; }
+
+  .choice-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    text-align: left;
+    transition: all .2s;
+    white-space: nowrap;
+  }
+  .choice-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold2);
+    background: rgba(201,168,76,0.06);
+  }
+  .choice-btn.gold {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .choice-btn:disabled {
+    opacity: 0.4; cursor: default;
+  }
+
+  /* ── Availability card ── */
+  .avail-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-top: 8px;
+    font-size: 13px;
+  }
+  .avail-card .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+  .avail-free { color: #4ade80; }
+  .avail-busy { color: #f87171; }
+
+  /* ── Price card ── */
+  .price-card {
+    background: linear-gradient(135deg, #1a1500, #1a1200);
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.8;
+  }
+  .price-card .price-row { display: flex; justify-content: space-between; }
+  .price-card .total { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; color: var(--gold2); border-top: 1px solid rgba(201,168,76,0.2); padding-top: 8px; margin-top: 8px; }
+
+  /* ── Input area ── */
+  .input-area {
+    padding: 14px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    display: flex; gap: 10px; align-items: center;
+  }
+  .chat-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 11px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none; transition: border-color .2s;
+  }
+  .chat-input:focus { border-color: rgba(201,168,76,0.4); }
+  .chat-input::placeholder { color: var(--muted); }
+  .send-btn {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    border: none; border-radius: 12px;
+    color: #0a0a0a; font-size: 18px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: opacity .2s, transform .1s;
+    flex-shrink: 0;
+  }
+  .send-btn:hover { opacity: 0.9; }
+  .send-btn:active { transform: scale(0.95); }
+  .send-btn:disabled { opacity: 0.3; cursor: default; }
+
+  /* ── Typing indicator ── */
+  .typing { display: flex; gap: 5px; padding: 14px 16px 10px; align-self: flex-start; }
+  .typing span {
+    width: 7px; height: 7px;
+    background: var(--muted); border-radius: 50%;
+    animation: bounce .9s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: .15s; }
+  .typing span:nth-child(3) { animation-delay: .3s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+</style>
+</head>
+<body>
+
+<div class="widget">
+  <div class="header">
+    <div class="header-icon">🎧</div>
+    <div>
+      <div class="header-title">Earpiece Rental</div>
+      <div class="header-sub">Professional equipment for speakers</div>
+    </div>
+    <div class="online-dot"></div>
+  </div>
+  <div class="lang-bar">
+    <button class="lang-btn active" onclick="setLang('ru')">🇷🇺 Русский</button>
+    <button class="lang-btn" onclick="setLang('en')">🇬🇧 English</button>
+  </div>
+  <div class="messages" id="messages"></div>
+  <div class="input-area">
+    <input class="chat-input" id="userInput" placeholder="Введите сообщение..." onkeydown="if(event.key==='Enter') sendText()" />
+    <button class="send-btn" id="sendBtn" onclick="sendText()">➤</button>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+let lang = 'ru';
+let step = 'menu';
+let booking = {};
+
+// ── Booked dates (sync with backend in production) ─────────────
+const bookedDates = []; // fill from your backend
+
+// ── Texts ──────────────────────────────────────────────────────
+const T = {
+  ru: {
+    welcome: '👋 Добро пожаловать!\n\nЯ помогу вам арендовать профессиональное оборудование для выступлений. Чем могу помочь?',
+    menuBtns: ['🛍 Продукты и цены','📅 Забронировать','📆 Доступность','❓ FAQ','📞 Контакты'],
+    menuKeys: ['products','book','availability','faq','contact'],
+    products: '🎧 *Наше оборудование:*\n\n🎧 Микронаушник\n└ 20€/день | Депозит 80€\n└ Невидимый bluetooth-наушник для выступлений\n\n📷 Микронаушник + Камера\n└ 40€/день | Депозит 160€\n└ Наушник с миниатюрной скрытой камерой',
+    bookChoose: 'Выберите продукт для аренды:',
+    productBtns: ['🎧 Микронаушник (20€/день)','📷 + Камера (40€/день)'],
+    askName: '👤 Введите ваше имя и фамилию:',
+    askPhone: '📞 Введите номер телефона (с кодом страны):',
+    askStart: '📅 Дата начала аренды (ДД.ММ.ГГГГ):',
+    askEnd: '📅 Дата окончания аренды (ДД.ММ.ГГГГ):',
+    invalidDate: '❌ Неверный формат. Используйте ДД.ММ.ГГГГ',
+    pastDate: '❌ Нельзя выбрать прошедшую дату.',
+    dateOrder: '❌ Дата начала должна быть раньше окончания.',
+    unavailable: (d) => `❌ К сожалению, оборудование занято ${d}.`,
+    confirmBtns: ['✅ Подтвердить','❌ Отмена'],
+    confirmed: '🎉 Заявка отправлена! Мы свяжемся с вами в течение часа.\n\nНомер заявки: #' + Math.floor(Math.random()*9000+1000),
+    cancelled: '❌ Заявка отменена.',
+    availFree: '✅ Оборудование свободно — нет занятых дат!',
+    faq: '❓ *FAQ:*\n\n❓ Как работает наушник?\n→ Bluetooth-устройство, практически невидимое. Работает со смартфоном.\n\n❓ Как оплатить?\n→ Наличными или переводом. Депозит возвращается.\n\n❓ Доставка?\n→ Самовывоз или курьер — обсудим при подтверждении.\n\n❓ Что если сломается?\n→ Депозит покрывает ущерб.',
+    contact: '📞 Контакты:\n\nTelegram: @your_username\nWhatsApp: +XX XXX XXX XXXX\nEmail: info@example.com',
+    back: '⬅️ Меню',
+    inputHint: 'Введите сообщение...',
+  },
+  en: {
+    welcome: '👋 Welcome!\n\nI can help you rent professional equipment for public speaking. How can I help?',
+    menuBtns: ['🛍 Products & Pricing','📅 Book Now','📆 Availability','❓ FAQ','📞 Contact'],
+    menuKeys: ['products','book','availability','faq','contact'],
+    products: '🎧 *Our Equipment:*\n\n🎧 Micro Earpiece\n└ €20/day | Deposit €80\n└ Invisible bluetooth earpiece for speeches\n\n📷 Micro Earpiece + Camera\n└ €40/day | Deposit €160\n└ Earpiece with miniature hidden camera',
+    bookChoose: 'Choose a product to rent:',
+    productBtns: ['🎧 Micro Earpiece (€20/day)','📷 + Camera (€40/day)'],
+    askName: '👤 Enter your full name:',
+    askPhone: '📞 Enter your phone number (with country code):',
+    askStart: '📅 Start date of rental (DD.MM.YYYY):',
+    askEnd: '📅 End date of rental (DD.MM.YYYY):',
+    invalidDate: '❌ Invalid format. Use DD.MM.YYYY',
+    pastDate: '❌ Cannot select a past date.',
+    dateOrder: '❌ Start date must be before end date.',
+    unavailable: (d) => `❌ Sorry, the device is booked on ${d}.`,
+    confirmBtns: ['✅ Confirm','❌ Cancel'],
+    confirmed: '🎉 Booking submitted! We\'ll contact you within an hour.\n\nBooking ID: #' + Math.floor(Math.random()*9000+1000),
+    cancelled: '❌ Booking cancelled.',
+    availFree: '✅ Equipment is available — no booked dates!',
+    faq: '❓ *FAQ:*\n\n❓ How does the earpiece work?\n→ Tiny bluetooth device, nearly invisible. Works with a smartphone.\n\n❓ How to pay?\n→ Cash or bank transfer. Deposit is returned.\n\n❓ Delivery?\n→ Pickup or courier — we\'ll discuss when confirming.\n\n❓ What if it breaks?\n→ Deposit covers damage.',
+    contact: '📞 Contact us:\n\nTelegram: @your_username\nWhatsApp: +XX XXX XXX XXXX\nEmail: info@example.com',
+    back: '⬅️ Menu',
+    inputHint: 'Type a message...',
+  }
+};
+
+function txt(key, ...args) {
+  const v = T[lang][key];
+  return typeof v === 'function' ? v(...args) : v;
+}
+
+// ── DOM helpers ─────────────────────────────────────────────────
+const msgs = document.getElementById('messages');
+
+function addMsg(text, type='bot', html=false) {
+  const div = document.createElement('div');
+  div.className = `msg ${type}`;
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  if (html) bubble.innerHTML = text.replace(/\n/g,'<br>').replace(/\*(.*?)\*/g,'<strong>$1</strong>');
+  else bubble.textContent = text;
+  div.appendChild(bubble);
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function addButtons(btns, callback, inline=false) {
+  const wrap = document.createElement('div');
+  wrap.className = `msg bot`;
+  const group = document.createElement('div');
+  group.className = `btn-group${inline?' inline':''}`;
+  btns.forEach((label, i) => {
+    const b = document.createElement('button');
+    b.className = 'choice-btn';
+    b.textContent = label;
+    b.onclick = () => { disableAll(wrap); callback(i, label); };
+    group.appendChild(b);
+  });
+  wrap.appendChild(group);
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+  return wrap;
+}
+
+function disableAll(container) {
+  container.querySelectorAll('button').forEach(b => b.disabled = true);
+}
+
+function showTyping() {
+  const t = document.createElement('div');
+  t.className = 'typing msg bot'; t.id = 'typing';
+  t.innerHTML = '<span></span><span></span><span></span>';
+  msgs.appendChild(t);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function hideTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+}
+
+async function botReply(fn, delay=700) {
+  showTyping();
+  await new Promise(r => setTimeout(r, delay));
+  hideTyping();
+  fn();
+}
+
+// ── Input ───────────────────────────────────────────────────────
+const input = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+
+function enableInput(hint) {
+  input.placeholder = hint || txt('inputHint');
+  input.disabled = false;
+  sendBtn.disabled = false;
+  input.focus();
+}
+function disableInput() {
+  input.disabled = true;
+  sendBtn.disabled = true;
+}
+
+function sendText() {
+  const val = input.value.trim();
+  if (!val || input.disabled) return;
+  addMsg(val, 'user');
+  input.value = '';
+  handleInput(val);
+}
+
+// ── Date helpers ─────────────────────────────────────────────────
+function parseDate(str) {
+  const m = str.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  if (!m) return null;
+  const d = new Date(+m[3], +m[2]-1, +m[1]);
+  if (d.getDate()!=+m[1]) return null;
+  return d;
+}
+function isBooked(d) { return bookedDates.includes(d); }
+function dateRange(startStr, endStr) {
+  const s = parseDate(startStr), e = parseDate(endStr);
+  const dates = [];
+  for (let d = new Date(s); d <= e; d.setDate(d.getDate()+1)) {
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    dates.push(`${dd}.${mm}.${d.getFullYear()}`);
+  }
+  return dates;
+}
+function calcPrice(productKey, startStr, endStr) {
+  const s = parseDate(startStr), e = parseDate(endStr);
+  const days = Math.round((e-s)/(1000*60*60*24))+1;
+  const prices = { earpiece: { day: 20, dep: 80 }, earpiece_camera: { day: 40, dep: 160 } };
+  const p = prices[productKey];
+  return { days, rental: days*p.day, deposit: p.dep, total: days*p.day+p.dep };
+}
+
+// ── Flow ─────────────────────────────────────────────────────────
+function showMenu() {
+  step = 'menu';
+  disableInput();
+  botReply(() => {
+    addButtons(txt('menuBtns'), (i) => {
+      const key = T[lang].menuKeys[i];
+      handleMenu(key);
+    });
+  });
+}
+
+function handleMenu(key) {
+  if (key === 'products') {
+    botReply(() => {
+      addMsg(txt('products'), 'bot', true);
+      botReply(() => addButtons([txt('back')], () => showMenu()), 400);
+    });
+  }
+  else if (key === 'book') {
+    step = 'book_product';
+    botReply(() => {
+      addMsg(txt('bookChoose'), 'bot');
+      addButtons(txt('productBtns'), (i) => {
+        booking.product = i === 0 ? 'earpiece' : 'earpiece_camera';
+        booking.productLabel = txt('productBtns')[i];
+        botReply(() => {
+          step = 'book_name';
+          addMsg(txt('askName'), 'bot');
+          enableInput('');
+        });
+      });
+    });
+  }
+  else if (key === 'availability') {
+    botReply(() => {
+      const card = document.createElement('div');
+      card.className = 'msg bot';
+      const c = document.createElement('div');
+      c.className = 'avail-card';
+      if (bookedDates.length === 0) {
+        c.innerHTML = `<div class="label">${lang==='ru'?'Статус':'Status'}</div><div class="avail-free">✅ ${txt('availFree')}</div>`;
+      } else {
+        c.innerHTML = `<div class="label">${lang==='ru'?'Занятые даты':'Booked dates'}</div>` +
+          bookedDates.map(d=>`<div class="avail-busy">• ${d}</div>`).join('');
+      }
+      card.appendChild(c);
+      msgs.appendChild(card);
+      msgs.scrollTop = msgs.scrollHeight;
+      botReply(() => addButtons([txt('back')], () => showMenu()), 400);
+    });
+  }
+  else if (key === 'faq') {
+    botReply(() => {
+      addMsg(txt('faq'), 'bot', true);
+      botReply(() => addButtons([txt('back')], () => showMenu()), 400);
+    });
+  }
+  else if (key === 'contact') {
+    botReply(() => {
+      addMsg(txt('contact'), 'bot', true);
+      botReply(() => addButtons([txt('back')], () => showMenu()), 400);
+    });
+  }
+}
+
+function handleInput(val) {
+  disableInput();
+
+  if (step === 'book_name') {
+    booking.name = val;
+    botReply(() => { step = 'book_phone'; addMsg(txt('askPhone'),'bot'); enableInput(''); });
+  }
+  else if (step === 'book_phone') {
+    booking.phone = val;
+    botReply(() => { step = 'book_start'; addMsg(txt('askStart'),'bot'); enableInput('DD.MM.YYYY'); });
+  }
+  else if (step === 'book_start') {
+    const d = parseDate(val);
+    if (!d) { botReply(() => { addMsg(txt('invalidDate'),'bot'); enableInput('DD.MM.YYYY'); }); return; }
+    if (d < new Date(new Date().toDateString())) { botReply(() => { addMsg(txt('pastDate'),'bot'); enableInput('DD.MM.YYYY'); }); return; }
+    booking.startDate = val;
+    botReply(() => { step = 'book_end'; addMsg(txt('askEnd'),'bot'); enableInput('DD.MM.YYYY'); });
+  }
+  else if (step === 'book_end') {
+    const s = parseDate(booking.startDate), e = parseDate(val);
+    if (!e) { botReply(() => { addMsg(txt('invalidDate'),'bot'); enableInput('DD.MM.YYYY'); }); return; }
+    if (e < s) { botReply(() => { addMsg(txt('dateOrder'),'bot'); enableInput('DD.MM.YYYY'); }); return; }
+
+    const range = dateRange(booking.startDate, val);
+    const busy = range.find(d => isBooked(d));
+    if (busy) { botReply(() => { addMsg(txt('unavailable', busy),'bot'); enableInput('DD.MM.YYYY'); }); return; }
+
+    booking.endDate = val;
+    const p = calcPrice(booking.product, booking.startDate, val);
+    booking.price = p;
+
+    botReply(() => {
+      step = 'book_confirm';
+      // Price card
+      const wrap = document.createElement('div');
+      wrap.className = 'msg bot';
+      const card = document.createElement('div');
+      card.className = 'price-card';
+      card.innerHTML = `
+        <div class="price-row"><span>📦 ${lang==='ru'?'Продукт':'Product'}</span><span>${booking.productLabel}</span></div>
+        <div class="price-row"><span>👤 ${lang==='ru'?'Имя':'Name'}</span><span>${booking.name}</span></div>
+        <div class="price-row"><span>📞 ${lang==='ru'?'Телефон':'Phone'}</span><span>${booking.phone}</span></div>
+        <div class="price-row"><span>📅 ${lang==='ru'?'Даты':'Dates'}</span><span>${booking.startDate} — ${booking.endDate}</span></div>
+        <div class="price-row"><span>📆 ${lang==='ru'?'Дней':'Days'}</span><span>${p.days}</span></div>
+        <div class="price-row"><span>💰 ${lang==='ru'?'Аренда':'Rental'}</span><span>${p.rental}€</span></div>
+        <div class="price-row"><span>🔐 ${lang==='ru'?'Депозит':'Deposit'}</span><span>${p.deposit}€</span></div>
+        <div class="price-row total"><span>${lang==='ru'?'ИТОГО':'TOTAL'}</span><span>${p.total}€</span></div>
+      `;
+      wrap.appendChild(card);
+      msgs.appendChild(wrap);
+      msgs.scrollTop = msgs.scrollHeight;
+
+      addButtons(txt('confirmBtns'), (i) => {
+        if (i === 0) {
+          botReply(() => { addMsg(txt('confirmed'),'bot'); botReply(() => showMenu(), 600); });
+        } else {
+          botReply(() => { addMsg(txt('cancelled'),'bot'); botReply(() => showMenu(), 600); });
+        }
+      }, true);
+    });
+  }
+}
+
+// ── Lang switch ──────────────────────────────────────────────────
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll('.lang-btn').forEach((b,i) => {
+    b.classList.toggle('active', (i===0&&l==='ru')||(i===1&&l==='en'));
+  });
+  msgs.innerHTML = '';
+  booking = {};
+  start();
+}
+
+// ── Init ─────────────────────────────────────────────────────────
+function start() {
+  disableInput();
+  botReply(() => {
+    addMsg(txt('welcome'), 'bot', true);
+    showMenu();
+  }, 500);
+}
+
+start();
+</script>
+</body>
+</html>
